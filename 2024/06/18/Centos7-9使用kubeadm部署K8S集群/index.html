@@ -1,0 +1,902 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="XuShuai">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="Centos7.9使用kubeadm部署K8S集群使用kubeadm部署一个k8s集群，单master+2worker节点。 1. 环境信息 操作系统：CentOS 7.9.2009 内存: 2GB CPU: 2 网络: 能够互访，能够访问互联网     hostname ip 备注    k8s-master 192.168.0.51 master   k8s-node1 192.168.0.5">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Centos7.9使用kubeadm部署K8S集群">
+<meta property="og:url" content="https://lldhsds.github.io/2024/06/18/Centos7-9%E4%BD%BF%E7%94%A8kubeadm%E9%83%A8%E7%BD%B2K8S%E9%9B%86%E7%BE%A4/index.html">
+<meta property="og:site_name" content="思享云栈">
+<meta property="og:description" content="Centos7.9使用kubeadm部署K8S集群使用kubeadm部署一个k8s集群，单master+2worker节点。 1. 环境信息 操作系统：CentOS 7.9.2009 内存: 2GB CPU: 2 网络: 能够互访，能够访问互联网     hostname ip 备注    k8s-master 192.168.0.51 master   k8s-node1 192.168.0.5">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-06-18T14:18:20.000Z">
+<meta property="article:modified_time" content="2024-06-18T14:29:49.706Z">
+<meta property="article:author" content="XuShuai">
+<meta property="article:tag" content="K8S">
+<meta property="article:tag" content="kubeadm部署">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>Centos7.9使用kubeadm部署K8S集群 - 思享云栈</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"lldhsds.github.io","root":"/","version":"1.9.7","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":"enable","follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":"7AbpnpXfs4DiBWTCswdFt7Zw-gzGzoHsz","app_key":"yJBBbskbkPOosFYemg59vXg2","server_url":"https://7abpnpxf.lc-cn-n1-shared.com","path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+    <!-- Google tag (gtag.js) -->
+    <script async>
+      if (!Fluid.ctx.dnt) {
+        Fluid.utils.createScript("https://www.googletagmanager.com/gtag/js?id=", function() {
+          window.dataLayer = window.dataLayer || [];
+          function gtag() {
+            dataLayer.push(arguments);
+          }
+          gtag('js', new Date());
+          gtag('config', '');
+        });
+      }
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+    
+  
+
+
+
+  
+<meta name="generator" content="Hexo 7.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>思享云栈</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" target="_self" href="javascript:;" role="button"
+                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="iconfont icon-books"></i>
+                <span>文档</span>
+              </a>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                
+                  
+                  
+                  
+                  <a class="dropdown-item" href="https://hexo.fluid-dev.com/" target="_self">
+                    
+                    <span>主题博客</span>
+                  </a>
+                
+                  
+                  
+                  
+                  <a class="dropdown-item" href="https://hexo.fluid-dev.com/docs/guide/" target="_self">
+                    
+                    <span>配置指南</span>
+                  </a>
+                
+                  
+                  
+                  
+                  <a class="dropdown-item" href="https://hexo.fluid-dev.com/docs/icon/" target="_self">
+                    
+                    <span>图标用法</span>
+                  </a>
+                
+              </div>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/" target="_self">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Centos7.9使用kubeadm部署K8S集群"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-06-18 22:18" pubdate>
+          星期二, 六月 18日 2024, 10:18 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          <!-- compatible with older versions-->
+          1.2k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          <!-- compatible with older versions-->
+          10 分钟
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="leancloud-page-views-container" class="post-meta" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="leancloud-page-views"></span> 次
+        </span>
+        
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">Centos7.9使用kubeadm部署K8S集群</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="Centos7-9使用kubeadm部署K8S集群"><a href="#Centos7-9使用kubeadm部署K8S集群" class="headerlink" title="Centos7.9使用kubeadm部署K8S集群"></a>Centos7.9使用kubeadm部署K8S集群</h1><p>使用kubeadm部署一个k8s集群，单master+2worker节点。</p>
+<h2 id="1-环境信息"><a href="#1-环境信息" class="headerlink" title="1. 环境信息"></a>1. 环境信息</h2><ul>
+<li>操作系统：CentOS 7.9.2009</li>
+<li>内存: 2GB</li>
+<li>CPU: 2</li>
+<li>网络: 能够互访，能够访问互联网</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>hostname</th>
+<th>ip</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>k8s-master</td>
+<td>192.168.0.51</td>
+<td>master</td>
+</tr>
+<tr>
+<td>k8s-node1</td>
+<td>192.168.0.52</td>
+<td>worker</td>
+</tr>
+<tr>
+<td>k8s-node2</td>
+<td>192.168.0.53</td>
+<td>worker</td>
+</tr>
+</tbody></table>
+<h2 id="2-准备工作"><a href="#2-准备工作" class="headerlink" title="2. 准备工作"></a>2. 准备工作</h2><p>在所有节点（包括 Master 和 Worker 节点）上执行以下步骤。</p>
+<h3 id="2-1-linux基础配置"><a href="#2-1-linux基础配置" class="headerlink" title="2.1 linux基础配置"></a>2.1 linux基础配置</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># 关闭防火墙</span><br>systemctl stop firewalld &amp;&amp; systemctl <span class="hljs-built_in">disable</span> firewalld<br><br><span class="hljs-comment"># 关闭 swap</span><br>swapoff -a &amp;&amp; sed -i <span class="hljs-string">&#x27;/ swap / s/^\(.*\)$/#\1/g&#x27;</span> /etc/fstab<br><br><span class="hljs-comment"># 关闭 selinux</span><br>setenforce 0 &amp;&amp; sed -i <span class="hljs-string">&#x27;s/^SELINUX=.*/SELINUX=disabled/&#x27;</span> /etc/selinux/config<br><br><span class="hljs-comment"># 设置时区</span><br>timedatectl set-timezone Asia/Shanghai<br><br><span class="hljs-comment"># 时间同步</span><br>yum -y install ntpdate<br>ntpdate time.windows.com<br>hwclock --systohc<br><br><span class="hljs-comment"># 将桥接的IPv4流量传递到iptables的链</span><br><span class="hljs-built_in">cat</span> &gt; /etc/sysctl.d/k8s.conf &lt;&lt; <span class="hljs-string">EOF</span><br><span class="hljs-string">net.bridge.bridge-nf-call-ip6tables = 1</span><br><span class="hljs-string">net.bridge.bridge-nf-call-iptables = 1</span><br><span class="hljs-string">EOF</span><br>sysctl --system  <span class="hljs-comment"># 生效</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="2-2-安装-Docker"><a href="#2-2-安装-Docker" class="headerlink" title="2.2 安装 Docker"></a>2.2 安装 Docker</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_"># </span><span class="language-bash">添加镜像源</span><br>curl https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo -o /etc/yum.repos.d/docker-ce.repo<br><span class="hljs-meta prompt_"># </span><span class="language-bash">查看docker-ce的版本列表</span><br>yum list docker-ce --showduplicates | sort -r<br><span class="hljs-meta prompt_"># </span><span class="language-bash">安装20.10</span><br>yum -y install docker-ce-20.10.6-3.el7<br>systemctl start docker<br>systemctl enable docker<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">换成阿里Docker仓库</span><br>cat &gt; /etc/docker/daemon.json &lt;&lt; EOF<br>&#123;<br>  &quot;registry-mirrors&quot;: [&quot;https://wnsrsn9i.mirror.aliyuncs.com&quot;]<br>&#125;<br>EOF<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">重启配置生效</span><br>systemctl restart docker<br>docker info<br>...<br> Registry Mirrors:<br>  https://wnsrsn9i.mirror.aliyuncs.com/<br>...<br></code></pre></td></tr></table></figure>
+
+<h3 id="2-3-安装-kubeadm、kubelet-和-kubectl"><a href="#2-3-安装-kubeadm、kubelet-和-kubectl" class="headerlink" title="2.3 安装 kubeadm、kubelet 和 kubectl"></a>2.3 安装 kubeadm、kubelet 和 kubectl</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_"># </span><span class="language-bash">添加镜像源</span><br>cat &gt; /etc/yum.repos.d/kubernetes.repo &lt;&lt; EOF<br>[kubernetes]<br>name=Kubernetes<br>baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64<br>enabled=1<br>gpgcheck=0<br>repo_gpgcheck=0<br>gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg<br>EOF<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">查看支持的版本</span><br>yum list kubelet --showduplicates | sort -r<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">安装</span><br>yum install -y kubelet-1.18.0 kubeadm-1.18.0 kubectl-1.18.0<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">配置kubelet服务自启动</span><br>systemctl enable kubelet<br></code></pre></td></tr></table></figure>
+
+
+<h2 id="3-部署k8s集群"><a href="#3-部署k8s集群" class="headerlink" title="3. 部署k8s集群"></a>3. 部署k8s集群</h2><p>设置hosts：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_"># </span><span class="language-bash">设置主机名</span><br>hostnamectl set-hostname k8s-master  # k8s-node1 / k8s-node2<br>hostname<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">配置 hosts（只在master执行）</span><br>cat &gt;&gt; /etc/hosts &lt;&lt; EOF<br>192.168.0.51 k8s-master<br>192.168.0.52 k8s-node1<br>192.168.0.53 k8s-node2<br>EOF<br></code></pre></td></tr></table></figure>
+
+<p>初始化master：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_"># </span><span class="language-bash">运行初始化命令，apiserver地址为master地址</span><br>kubeadm init \<br>--apiserver-advertise-address=192.168.0.51 \<br>--image-repository registry.aliyuncs.com/google_containers \<br>--kubernetes-version v1.18.0 \<br>--service-cidr=10.96.0.0/12 \<br>--pod-network-cidr=10.244.0.0/16<br><br>...<br>[addons] Applied essential addon: CoreDNS<br>[addons] Applied essential addon: kube-proxy<br><br>Your Kubernetes control-plane has initialized successfully!<br><br>To start using your cluster, you need to run the following as a regular user:<br><br>  mkdir -p $HOME/.kube<br>  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config<br>  sudo chown $(id -u):$(id -g) $HOME/.kube/config<br><br>You should now deploy a pod network to the cluster.<br>Run &quot;kubectl apply -f [podnetwork].yaml&quot; with one of the options listed at:<br>  https://kubernetes.io/docs/concepts/cluster-administration/addons/<br><br>Then you can join any number of worker nodes by running the following on each as root:<br><br>kubeadm join 192.168.0.51:6443 --token fxaizi.pb73yzhubpffc9zf \<br>    --discovery-token-ca-cert-hash sha256:95b842305c484ffcdcf3d5ccdeb5ada6ee89f418e77709138b491654e88c88ed<br>...<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">初始化成功后，按照提示执行如下命令</span><br>mkdir -p $HOME/.kube<br>sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config<br>sudo chown $(id -u):$(id -g) $HOME/.kube/config<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">查看节点列表，此时节点状态为NotReady</span><br>kubectl get nodes<br></code></pre></td></tr></table></figure>
+
+<p>初始化worker：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell">kubeadm join 192.168.0.51:6443 --token fxaizi.pb73yzhubpffc9zf \<br>    --discovery-token-ca-cert-hash sha256:95b842305c484ffcdcf3d5ccdeb5ada6ee89f418e77709138b491654e88c88ed<br></code></pre></td></tr></table></figure>
+
+<p>master部署网络插件：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell">kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml<br>kubectl get pods -n kube-system  # 查看运行状态<br></code></pre></td></tr></table></figure>
+
+<p>如果无法下载，手动创建kube-flannel.yml，内容如下：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br></pre></td><td class="code"><pre><code class="hljs yaml"><span class="hljs-meta">---</span><br><span class="hljs-attr">kind:</span> <span class="hljs-string">Namespace</span><br><span class="hljs-attr">apiVersion:</span> <span class="hljs-string">v1</span><br><span class="hljs-attr">metadata:</span><br>  <span class="hljs-attr">name:</span> <span class="hljs-string">kube-flannel</span><br>  <span class="hljs-attr">labels:</span><br>    <span class="hljs-attr">k8s-app:</span> <span class="hljs-string">flannel</span><br>    <span class="hljs-attr">pod-security.kubernetes.io/enforce:</span> <span class="hljs-string">privileged</span><br><span class="hljs-meta">---</span><br><span class="hljs-attr">kind:</span> <span class="hljs-string">ClusterRole</span><br><span class="hljs-attr">apiVersion:</span> <span class="hljs-string">rbac.authorization.k8s.io/v1</span><br><span class="hljs-attr">metadata:</span><br>  <span class="hljs-attr">labels:</span><br>    <span class="hljs-attr">k8s-app:</span> <span class="hljs-string">flannel</span><br>  <span class="hljs-attr">name:</span> <span class="hljs-string">flannel</span><br><span class="hljs-attr">rules:</span><br><span class="hljs-bullet">-</span> <span class="hljs-attr">apiGroups:</span><br>  <span class="hljs-bullet">-</span> <span class="hljs-string">&quot;&quot;</span><br>  <span class="hljs-attr">resources:</span><br>  <span class="hljs-bullet">-</span> <span class="hljs-string">pods</span><br>  <span class="hljs-attr">verbs:</span><br>  <span class="hljs-bullet">-</span> <span class="hljs-string">get</span><br><span class="hljs-bullet">-</span> <span class="hljs-attr">apiGroups:</span><br>  <span class="hljs-bullet">-</span> <span class="hljs-string">&quot;&quot;</span><br>  <span class="hljs-attr">resources:</span><br>  <span class="hljs-bullet">-</span> <span class="hljs-string">nodes</span><br>  <span class="hljs-attr">verbs:</span><br>  <span class="hljs-bullet">-</span> <span class="hljs-string">get</span><br>  <span class="hljs-bullet">-</span> <span class="hljs-string">list</span><br>  <span class="hljs-bullet">-</span> <span class="hljs-string">watch</span><br><span class="hljs-bullet">-</span> <span class="hljs-attr">apiGroups:</span><br>  <span class="hljs-bullet">-</span> <span class="hljs-string">&quot;&quot;</span><br>  <span class="hljs-attr">resources:</span><br>  <span class="hljs-bullet">-</span> <span class="hljs-string">nodes/status</span><br>  <span class="hljs-attr">verbs:</span><br>  <span class="hljs-bullet">-</span> <span class="hljs-string">patch</span><br><span class="hljs-meta">---</span><br><span class="hljs-attr">kind:</span> <span class="hljs-string">ClusterRoleBinding</span><br><span class="hljs-attr">apiVersion:</span> <span class="hljs-string">rbac.authorization.k8s.io/v1</span><br><span class="hljs-attr">metadata:</span><br>  <span class="hljs-attr">labels:</span><br>    <span class="hljs-attr">k8s-app:</span> <span class="hljs-string">flannel</span><br>  <span class="hljs-attr">name:</span> <span class="hljs-string">flannel</span><br><span class="hljs-attr">roleRef:</span><br>  <span class="hljs-attr">apiGroup:</span> <span class="hljs-string">rbac.authorization.k8s.io</span><br>  <span class="hljs-attr">kind:</span> <span class="hljs-string">ClusterRole</span><br>  <span class="hljs-attr">name:</span> <span class="hljs-string">flannel</span><br><span class="hljs-attr">subjects:</span><br><span class="hljs-bullet">-</span> <span class="hljs-attr">kind:</span> <span class="hljs-string">ServiceAccount</span><br>  <span class="hljs-attr">name:</span> <span class="hljs-string">flannel</span><br>  <span class="hljs-attr">namespace:</span> <span class="hljs-string">kube-flannel</span><br><span class="hljs-meta">---</span><br><span class="hljs-attr">apiVersion:</span> <span class="hljs-string">v1</span><br><span class="hljs-attr">kind:</span> <span class="hljs-string">ServiceAccount</span><br><span class="hljs-attr">metadata:</span><br>  <span class="hljs-attr">labels:</span><br>    <span class="hljs-attr">k8s-app:</span> <span class="hljs-string">flannel</span><br>  <span class="hljs-attr">name:</span> <span class="hljs-string">flannel</span><br>  <span class="hljs-attr">namespace:</span> <span class="hljs-string">kube-flannel</span><br><span class="hljs-meta">---</span><br><span class="hljs-attr">kind:</span> <span class="hljs-string">ConfigMap</span><br><span class="hljs-attr">apiVersion:</span> <span class="hljs-string">v1</span><br><span class="hljs-attr">metadata:</span><br>  <span class="hljs-attr">name:</span> <span class="hljs-string">kube-flannel-cfg</span><br>  <span class="hljs-attr">namespace:</span> <span class="hljs-string">kube-flannel</span><br>  <span class="hljs-attr">labels:</span><br>    <span class="hljs-attr">tier:</span> <span class="hljs-string">node</span><br>    <span class="hljs-attr">k8s-app:</span> <span class="hljs-string">flannel</span><br>    <span class="hljs-attr">app:</span> <span class="hljs-string">flannel</span><br><span class="hljs-attr">data:</span><br>  <span class="hljs-attr">cni-conf.json:</span> <span class="hljs-string">|</span><br><span class="hljs-string">    &#123;</span><br><span class="hljs-string">      &quot;name&quot;: &quot;cbr0&quot;,</span><br><span class="hljs-string">      &quot;cniVersion&quot;: &quot;0.3.1&quot;,</span><br><span class="hljs-string">      &quot;plugins&quot;: [</span><br><span class="hljs-string">        &#123;</span><br><span class="hljs-string">          &quot;type&quot;: &quot;flannel&quot;,</span><br><span class="hljs-string">          &quot;delegate&quot;: &#123;</span><br><span class="hljs-string">            &quot;hairpinMode&quot;: true,</span><br><span class="hljs-string">            &quot;isDefaultGateway&quot;: true</span><br><span class="hljs-string">          &#125;</span><br><span class="hljs-string">        &#125;,</span><br><span class="hljs-string">        &#123;</span><br><span class="hljs-string">          &quot;type&quot;: &quot;portmap&quot;,</span><br><span class="hljs-string">          &quot;capabilities&quot;: &#123;</span><br><span class="hljs-string">            &quot;portMappings&quot;: true</span><br><span class="hljs-string">          &#125;</span><br><span class="hljs-string">        &#125;</span><br><span class="hljs-string">      ]</span><br><span class="hljs-string">    &#125;</span><br><span class="hljs-string"></span>  <span class="hljs-attr">net-conf.json:</span> <span class="hljs-string">|</span><br><span class="hljs-string">    &#123;</span><br><span class="hljs-string">      &quot;Network&quot;: &quot;10.244.0.0/16&quot;,</span><br><span class="hljs-string">      &quot;EnableNFTables&quot;: false,</span><br><span class="hljs-string">      &quot;Backend&quot;: &#123;</span><br><span class="hljs-string">        &quot;Type&quot;: &quot;vxlan&quot;</span><br><span class="hljs-string">      &#125;</span><br><span class="hljs-string">    &#125;</span><br><span class="hljs-string"></span><span class="hljs-meta">---</span><br><span class="hljs-attr">apiVersion:</span> <span class="hljs-string">apps/v1</span><br><span class="hljs-attr">kind:</span> <span class="hljs-string">DaemonSet</span><br><span class="hljs-attr">metadata:</span><br>  <span class="hljs-attr">name:</span> <span class="hljs-string">kube-flannel-ds</span><br>  <span class="hljs-attr">namespace:</span> <span class="hljs-string">kube-flannel</span><br>  <span class="hljs-attr">labels:</span><br>    <span class="hljs-attr">tier:</span> <span class="hljs-string">node</span><br>    <span class="hljs-attr">app:</span> <span class="hljs-string">flannel</span><br>    <span class="hljs-attr">k8s-app:</span> <span class="hljs-string">flannel</span><br><span class="hljs-attr">spec:</span><br>  <span class="hljs-attr">selector:</span><br>    <span class="hljs-attr">matchLabels:</span><br>      <span class="hljs-attr">app:</span> <span class="hljs-string">flannel</span><br>  <span class="hljs-attr">template:</span><br>    <span class="hljs-attr">metadata:</span><br>      <span class="hljs-attr">labels:</span><br>        <span class="hljs-attr">tier:</span> <span class="hljs-string">node</span><br>        <span class="hljs-attr">app:</span> <span class="hljs-string">flannel</span><br>    <span class="hljs-attr">spec:</span><br>      <span class="hljs-attr">affinity:</span><br>        <span class="hljs-attr">nodeAffinity:</span><br>          <span class="hljs-attr">requiredDuringSchedulingIgnoredDuringExecution:</span><br>            <span class="hljs-attr">nodeSelectorTerms:</span><br>            <span class="hljs-bullet">-</span> <span class="hljs-attr">matchExpressions:</span><br>              <span class="hljs-bullet">-</span> <span class="hljs-attr">key:</span> <span class="hljs-string">kubernetes.io/os</span><br>                <span class="hljs-attr">operator:</span> <span class="hljs-string">In</span><br>                <span class="hljs-attr">values:</span><br>                <span class="hljs-bullet">-</span> <span class="hljs-string">linux</span><br>      <span class="hljs-attr">hostNetwork:</span> <span class="hljs-literal">true</span><br>      <span class="hljs-attr">priorityClassName:</span> <span class="hljs-string">system-node-critical</span><br>      <span class="hljs-attr">tolerations:</span><br>      <span class="hljs-bullet">-</span> <span class="hljs-attr">operator:</span> <span class="hljs-string">Exists</span><br>        <span class="hljs-attr">effect:</span> <span class="hljs-string">NoSchedule</span><br>      <span class="hljs-attr">serviceAccountName:</span> <span class="hljs-string">flannel</span><br>      <span class="hljs-attr">initContainers:</span><br>      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">install-cni-plugin</span><br>        <span class="hljs-attr">image:</span> <span class="hljs-string">docker.io/flannel/flannel-cni-plugin:v1.4.1-flannel1</span><br>        <span class="hljs-attr">command:</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">cp</span><br>        <span class="hljs-attr">args:</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">-f</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">/flannel</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">/opt/cni/bin/flannel</span><br>        <span class="hljs-attr">volumeMounts:</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">cni-plugin</span><br>          <span class="hljs-attr">mountPath:</span> <span class="hljs-string">/opt/cni/bin</span><br>      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">install-cni</span><br>        <span class="hljs-attr">image:</span> <span class="hljs-string">docker.io/flannel/flannel:v0.25.4</span><br>        <span class="hljs-attr">command:</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">cp</span><br>        <span class="hljs-attr">args:</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">-f</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">/etc/kube-flannel/cni-conf.json</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">/etc/cni/net.d/10-flannel.conflist</span><br>        <span class="hljs-attr">volumeMounts:</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">cni</span><br>          <span class="hljs-attr">mountPath:</span> <span class="hljs-string">/etc/cni/net.d</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">flannel-cfg</span><br>          <span class="hljs-attr">mountPath:</span> <span class="hljs-string">/etc/kube-flannel/</span><br>      <span class="hljs-attr">containers:</span><br>      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">kube-flannel</span><br>        <span class="hljs-attr">image:</span> <span class="hljs-string">docker.io/flannel/flannel:v0.25.4</span><br>        <span class="hljs-attr">command:</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">/opt/bin/flanneld</span><br>        <span class="hljs-attr">args:</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">--ip-masq</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">--kube-subnet-mgr</span><br>        <span class="hljs-attr">resources:</span><br>          <span class="hljs-attr">requests:</span><br>            <span class="hljs-attr">cpu:</span> <span class="hljs-string">&quot;100m&quot;</span><br>            <span class="hljs-attr">memory:</span> <span class="hljs-string">&quot;50Mi&quot;</span><br>        <span class="hljs-attr">securityContext:</span><br>          <span class="hljs-attr">privileged:</span> <span class="hljs-literal">false</span><br>          <span class="hljs-attr">capabilities:</span><br>            <span class="hljs-attr">add:</span> [<span class="hljs-string">&quot;NET_ADMIN&quot;</span>, <span class="hljs-string">&quot;NET_RAW&quot;</span>]<br>        <span class="hljs-attr">env:</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">POD_NAME</span><br>          <span class="hljs-attr">valueFrom:</span><br>            <span class="hljs-attr">fieldRef:</span><br>              <span class="hljs-attr">fieldPath:</span> <span class="hljs-string">metadata.name</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">POD_NAMESPACE</span><br>          <span class="hljs-attr">valueFrom:</span><br>            <span class="hljs-attr">fieldRef:</span><br>              <span class="hljs-attr">fieldPath:</span> <span class="hljs-string">metadata.namespace</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">EVENT_QUEUE_DEPTH</span><br>          <span class="hljs-attr">value:</span> <span class="hljs-string">&quot;5000&quot;</span><br>        <span class="hljs-attr">volumeMounts:</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">run</span><br>          <span class="hljs-attr">mountPath:</span> <span class="hljs-string">/run/flannel</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">flannel-cfg</span><br>          <span class="hljs-attr">mountPath:</span> <span class="hljs-string">/etc/kube-flannel/</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">xtables-lock</span><br>          <span class="hljs-attr">mountPath:</span> <span class="hljs-string">/run/xtables.lock</span><br>      <span class="hljs-attr">volumes:</span><br>      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">run</span><br>        <span class="hljs-attr">hostPath:</span><br>          <span class="hljs-attr">path:</span> <span class="hljs-string">/run/flannel</span><br>      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">cni-plugin</span><br>        <span class="hljs-attr">hostPath:</span><br>          <span class="hljs-attr">path:</span> <span class="hljs-string">/opt/cni/bin</span><br>      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">cni</span><br>        <span class="hljs-attr">hostPath:</span><br>          <span class="hljs-attr">path:</span> <span class="hljs-string">/etc/cni/net.d</span><br>      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">flannel-cfg</span><br>        <span class="hljs-attr">configMap:</span><br>          <span class="hljs-attr">name:</span> <span class="hljs-string">kube-flannel-cfg</span><br>      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">xtables-lock</span><br>        <span class="hljs-attr">hostPath:</span><br>          <span class="hljs-attr">path:</span> <span class="hljs-string">/run/xtables.lock</span><br>          <span class="hljs-attr">type:</span> <span class="hljs-string">FileOrCreate</span><br></code></pre></td></tr></table></figure>
+
+<p>部署flannel会拉取两个镜像，国内网络环境有时候无法顺利拉取，可以从其他地方获取后离线导入当前环境：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs shell">[root@k8s-master ~]# docker images<br>REPOSITORY                                                        TAG               IMAGE ID       CREATED        SIZE<br>flannel/flannel                                                   v0.25.4           e6c43605b714   18 hours ago   81MB<br>flannel/flannel-cni-plugin                                        v1.4.1-flannel1   1e3c860c213d   7 weeks ago    10.3MB<br></code></pre></td></tr></table></figure>
+
+<h2 id="4-创建测试应用"><a href="#4-创建测试应用" class="headerlink" title="4. 创建测试应用"></a>4. 创建测试应用</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_"># </span><span class="language-bash">创建一个nginx应用，并暴露到节点外部</span><br>kubectl create deployment nginx --image=nginx<br>kubectl expose deployment nginx --port=80 --type=NodePort<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">查看部署的应用</span><br>kubectl get pod,svc<br>NAME                        READY   STATUS    RESTARTS   AGE<br>pod/nginx-f89759699-j9lnv   1/1     Running   0          30s<br><br>NAME                 TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE<br>service/kubernetes   ClusterIP   10.96.0.1        &lt;none&gt;        443/TCP        34m<br>service/nginx        NodePort    10.102.197.201   &lt;none&gt;        80:30510/TCP   19s<br></code></pre></td></tr></table></figure>
+
+<p>通过k8s节点ip+30510端口即可访问nginx。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/kubernetes/" class="category-chain-item">kubernetes</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/K8S/" class="print-no-link">#K8S</a>
+      
+        <a href="/tags/kubeadm%E9%83%A8%E7%BD%B2/" class="print-no-link">#kubeadm部署</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Centos7.9使用kubeadm部署K8S集群</div>
+      <div>https://lldhsds.github.io/2024/06/18/Centos7-9使用kubeadm部署K8S集群/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>XuShuai</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2024年6月18日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/06/16/Locust-web%E6%80%A7%E8%83%BD%E6%B5%8B%E8%AF%95%E5%AE%9E%E8%B7%B5/" title="Locust web性能测试实践">
+                        <span class="hidden-mobile">Locust web性能测试实践</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+  <div id="valine"></div>
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#valine', function() {
+      Fluid.utils.createScript('https://lib.baomitu.com/valine/1.5.1/Valine.min.js', function() {
+        var options = Object.assign(
+          {"appId":"7AbpnpXfs4DiBWTCswdFt7Zw-gzGzoHsz","appKey":"yJBBbskbkPOosFYemg59vXg2","path":"window.location.pathname","placeholder":null,"avatar":"retro","meta":["nick","mail","link"],"requiredFields":[],"pageSize":10,"lang":"zh-CN","highlight":false,"recordIP":false,"serverURLs":"","emojiCDN":null,"emojiMaps":null,"enableQQ":false},
+          {
+            el: "#valine",
+            path: window.location.pathname
+          }
+        )
+        new Valine(options);
+        Fluid.utils.waitElementVisible('#valine .vcontent', () => {
+          var imgSelector = '#valine .vcontent img:not(.vemoji)';
+          Fluid.plugins.imageCaption(imgSelector);
+          Fluid.plugins.fancyBox(imgSelector);
+        })
+      });
+    });
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="leancloud-site-pv-container" style="display: none">
+        总访问量 
+        <span id="leancloud-site-pv"></span>
+         次
+      </span>
+    
+    
+      <span id="leancloud-site-uv-container" style="display: none">
+        总访客数 
+        <span id="leancloud-site-uv"></span>
+         人
+      </span>
+    
+    
+
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script defer src="/js/leancloud.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
